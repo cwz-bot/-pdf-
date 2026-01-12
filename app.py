@@ -26,7 +26,7 @@ with st.sidebar:
     st.info("免費 API Key 可至 [Google AI Studio](https://aistudio.google.com/) 申請")
     
     st.header("⚙️ 辨識偏好")
-    model_choice = st.selectbox("選擇模型", ["gemini-1.5-flash", "gemini-1.5-pro"], index=0)
+    model_choice = st.selectbox("選擇模型", ["gemini-2.5-flash", "gemini-2.5-pro"], index=0)
     st.caption("Flash 速度快、穩定；Pro 辨識力最強但限制較多。")
 
 # --- 核心函數 ---
@@ -62,7 +62,8 @@ if uploaded_files:
         st.warning("⚠️ 請先在左側輸入 API Key 才能開始辨識。")
     else:
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel(model_choice)
+        # 強制在模型名稱前加上 "models/" 前綴，這是最穩定的寫法
+        model = genai.GenerativeModel(f"models/{model_choice}")
         
         if st.button("🚀 開始批次處理"):
             processed_files = [] # 儲存處理後的二進位資料與檔名
@@ -101,7 +102,7 @@ if uploaded_files:
                 # 更新進度
                 progress_bar.progress((index + 1) / len(uploaded_files))
                 # 避免 429 錯誤的短暫休息
-                time.sleep(1.5 if model_choice == "gemini-1.5-flash" else 15)
+                time.sleep(1.5 if model_choice == "gemini-2.5-flash" else 15)
 
             status_text.success("✅ 全部檔案處理完成！")
             
@@ -117,19 +118,3 @@ if uploaded_files:
                 file_name="processed_documents.zip",
                 mime="application/zip"
             )
-
-# --- 部署提示 ---
-with st.expander("ℹ️ 如何部署到 Streamlit Cloud?"):
-    st.write("""
-    1. 將此程式碼存為 `app.py`。
-    2. 建立一個 `requirements.txt` 檔案，內容如下：
-       ```
-       streamlit
-       pymupdf
-       numpy
-       pillow
-       google-generativeai
-       ```
-    3. 將兩個檔案上傳至 GitHub Repo。
-    4. 登入 [Streamlit Cloud](https://share.streamlit.io/) 並連結該 Repo 即可。
-    """)
