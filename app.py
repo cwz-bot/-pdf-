@@ -7,6 +7,7 @@ import google.generativeai as genai
 import re
 import time
 import zipfile
+from google.api_core import exceptions
 
 # 頁面配置
 st.set_page_config(page_title="鐵路安衛文件助手", page_icon="🚉", layout="wide")
@@ -134,5 +135,6 @@ if uploaded_files:
                 file_name="processed_documents.zip",
                 mime="application/zip"
             )
+
 
 
