@@ -49,6 +49,10 @@ def get_smart_name(model, img):
     try:
         response = model.generate_content([prompt, img])
         return re.sub(r'[\\/:*?"<>|]', '', response.text.strip().split('\n')[0])
+    except exceptions.ResourceExhausted:
+        # 捕捉額度用盡錯誤
+        st.error("🚨 您的 API key 用量可能已達標，建議到 Google AI Studio 確認。")
+        return "API_LIMIT_REACHED"
     except Exception as e:
         st.error(f"AI 辨識出錯: {e}")
         return None
@@ -82,6 +86,13 @@ if uploaded_files:
                 img = Image.open(io.BytesIO(pix.tobytes()))
                 new_base_name = get_smart_name(model, img) or uploaded_file.name.replace(".pdf", "")
                 
+                # 如果偵測到額度滿了，後續檔案就不再呼叫 AI，只做去空白
+                if new_base_name == "API_LIMIT_REACHED":
+                    error_triggered = True
+                    new_base_name = f"需手動改名_{uploaded_file.name.replace('.pdf', '')}"
+                elif not new_base_name:
+                    new_base_name = uploaded_file.name.replace(".pdf", "")
+                    
                 # 2. 去空白邏輯
                 new_doc = fitz.open()
                 for i in range(len(doc)):
@@ -103,7 +114,9 @@ if uploaded_files:
                 progress_bar.progress((index + 1) / len(uploaded_files))
                 # 避免 429 錯誤的短暫休息
                 time.sleep(1.5 if model_choice == "gemini-2.5-flash" else 15)
-
+            if error_triggered:
+                st.warning("ℹ️ 由於 API 限制，部分檔案僅完成「去空白」處理，未完成「自動命名」。")
+                
             status_text.success("✅ 全部檔案處理完成！")
             
             # 3. 打包 ZIP
@@ -118,3 +131,4 @@ if uploaded_files:
                 file_name="processed_documents.zip",
                 mime="application/zip"
             )
+
