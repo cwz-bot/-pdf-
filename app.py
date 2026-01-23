@@ -73,6 +73,9 @@ if uploaded_files:
             processed_files = [] # 儲存處理後的二進位資料與檔名
             progress_bar = st.progress(0)
             status_text = st.empty()
+
+            # 在按鈕按下後才初始化這個變數，避免 NameError
+            error_triggered = False
             
             for index, uploaded_file in enumerate(uploaded_files):
                 status_text.text(f"正在處理 ({index+1}/{len(uploaded_files)}): {uploaded_file.name}")
@@ -131,4 +134,5 @@ if uploaded_files:
                 file_name="processed_documents.zip",
                 mime="application/zip"
             )
+
 
